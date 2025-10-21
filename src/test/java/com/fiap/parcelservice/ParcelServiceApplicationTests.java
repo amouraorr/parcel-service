@@ -1,4 +1,4 @@
-package com.alex.parcel_service;
+package com.fiap.parcelservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
