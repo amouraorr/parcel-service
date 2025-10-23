@@ -1,17 +1,20 @@
 spring:
   application:
     name: parcel-service
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/parceldb
-    username: parceluser
-    password: parcelpass
-    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/parcelservice_db}
+    username: ${SPRING_DATASOURCE_USERNAME:parcelservice}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
+
   jpa:
-    hibernate:
-      ddl-auto: validate
     properties:
       hibernate:
-        format_sql: true
+        jdbc:
+          time_zone: UTC
+    hibernate:
+      ddl-auto: validate
     show-sql: false
 
   flyway:
@@ -19,22 +22,20 @@ spring:
     locations: classpath:db/migration
 
 kafka:
-  bootstrap-servers: localhost:9092
-  topics:
-    parcels-in: parcels-in
-    notifications-out: notifications-out
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  consumer:
+    group-id: parcel-service-group
+    auto-offset-reset: earliest
+
+logging:
+  level:
+    root: INFO
 
 server:
-  port: 8081
+  port: ${SERVER_PORT:8080}
 
 springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
-
-logging:
-  level:
-    root: INFO
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"
