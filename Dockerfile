@@ -1,12 +1,17 @@
-FROM eclipse-temurin:21-jdk-jammy as build
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /workspace
-COPY pom.xml mvnw ./
-COPY .mvn .mvn
-COPY src src
-RUN ./mvnw -B -DskipTests package
 
-FROM eclipse-temurin:21-jre-jammy
-VOLUME /tmp
-COPY --from=build /workspace/target/parcel-service-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 8081
-ENTRYPOINT ["java","-jar","/app.jar"]
+COPY . /workspace
+
+RUN mvn -B -DskipTests -pl parcel-service -am package
+
+RUN mkdir -p /workspace && cp parcel-service/target/*.jar /workspace/app.jar
+
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /
+
+COPY --from=build /workspace/app.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "/app.jar"]
