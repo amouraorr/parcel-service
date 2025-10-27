@@ -13,6 +13,9 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Producer Kafka para eventos relacionados a encomendas.
+ */
 @Component
 public class ParcelKafkaProducer {
 
@@ -25,12 +28,19 @@ public class ParcelKafkaProducer {
 
     public ParcelKafkaProducer(KafkaTemplate<String, String> kafkaTemplate,
                                ObjectMapper objectMapper,
-                               @Value("${kafka.topics.parcels-in}") String parcelsInTopic,
-                               @Value("${kafka.topics.notifications-out}") String notificationsOutTopic) {
+                               @Value("${kafka.topics.parcels-in:parcels-in}") String parcelsInTopic,
+                               @Value("${kafka.topics.notifications-out:notifications-out}") String notificationsOutTopic) {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
-        this.parcelsInTopic = parcelsInTopic;
-        this.notificationsOutTopic = notificationsOutTopic;
+        this.parcelsInTopic = (parcelsInTopic == null || parcelsInTopic.isBlank()) ? "parcels-in" : parcelsInTopic;
+        this.notificationsOutTopic = (notificationsOutTopic == null || notificationsOutTopic.isBlank()) ? "notifications-out" : notificationsOutTopic;
+
+        if ("parcels-in".equals(this.parcelsInTopic)) {
+            log.warn("Using default kafka.topics.parcels-in='parcels-in'. Consider setting kafka.topics.parcels-in in your application properties or environment for profile 'docker'.");
+        }
+        if ("notifications-out".equals(this.notificationsOutTopic)) {
+            log.warn("Using default kafka.topics.notifications-out='notifications-out'. Consider setting kafka.topics.notifications-out in your application properties or environment for profile 'docker'.");
+        }
     }
 
     public void sendParcelReceivedEvent(Parcel parcel) {
@@ -59,7 +69,6 @@ public class ParcelKafkaProducer {
         event.put("apartment", parcel.getApartment());
         event.put("description", parcel.getDescription());
         event.put("pickedBy", pickedBy);
-
         event.put("timestamp", Instant.now().toString());
 
         try {

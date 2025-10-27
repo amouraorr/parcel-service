@@ -2,26 +2,29 @@ package com.fiap.parcelservice.infrastructure.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
+/**
+ * Configuração de segurança padrão — ativa quando o profile NÃO for 'docker'.
+ * Requer autenticação para as requisições, mas libera /actuator/**.
+ */
 @Configuration
-@EnableWebSecurity
+@Profile("!docker")
 public class SecurityConfig {
 
-    @Bean(name = "parcelServiceSecurityFilterChain")
-    @Order(Ordered.LOWEST_PRECEDENCE)
+    @Bean
     public SecurityFilterChain parcelServiceSecurityFilterChain(HttpSecurity http) throws Exception {
-
         http
-                .authorizeHttpRequests(authorize -> authorize
-                        .anyRequest().authenticated()
-                )
-                .httpBasic(basic -> {})
-                .csrf(csrf -> csrf.disable());
+            .authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/actuator/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .httpBasic(withDefaults())
+            .csrf(csrf -> csrf.disable());
 
         return http.build();
     }
