@@ -3,38 +3,42 @@ package com.fiap.parcelservice.infrastructure.config.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.annotation.Order;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
  * Configuração de segurança para o profile 'docker'.
- * Libera apenas endpoints relacionados ao Swagger/OpenAPI e actuator.
- */
-@Configuration("securityConfigDockerUnique")
+  */
+@Configuration
+@EnableWebSecurity
 @Profile("docker")
 public class SecurityConfigDocker {
 
     /**
-     * Libera apenas a documentação (Swagger/OpenAPI) e actuator no profile 'docker'.
+     * Bean principal de SecurityFilterChain para o profile 'docker'.
+     * Mantido com permitAll para facilitar o startup em ambiente Docker.
      */
     @Bean
-    @Order(1)
     public SecurityFilterChain parcelServiceSecurityFilterChainDocker(HttpSecurity http) throws Exception {
+        // Configuração mínima que permite que a aplicação suba.
         http
-                .securityMatcher(
-                        "/v3/api-docs/**",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/swagger-ui/index.html",
-                        "/swagger-resources/**",
-                        "/actuator/**"
-                )
-                .authorizeHttpRequests(authorize -> authorize
+                .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()
                 )
                 .csrf(csrf -> csrf.disable());
 
         return http.build();
+    }
+
+    /**
+     * PasswordEncoder padrão (BCrypt) — util para quando for necessário
+     * autenticação com senha.
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

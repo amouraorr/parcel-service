@@ -1,36 +1,19 @@
 package com.fiap.parcelservice.infrastructure.config.swagger;
 
-import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.security.SecurityRequirement;
-import io.swagger.v3.oas.models.security.SecurityScheme;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-
-@Configuration("openApiConfigSecurity")
+@Configuration
 public class OpenApiConfig {
 
-    @Bean
-    @ConditionalOnMissingBean(OpenAPI.class)
+    @Bean(name = "parcelServiceOpenAPI")
     public OpenAPI customOpenAPI() {
-
-        final String securitySchemeName = "bearerAuth";
-
         return new OpenAPI()
                 .info(new Info()
-                        .title("Parcel Service API - Security Docs")
-                        .version("v1"))
-                .components(new Components()
-                        .addSecuritySchemes(securitySchemeName,
-                                new SecurityScheme()
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")
-                        )
-                )
-                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName));
+                        .title("PÓS GRADUAÇÃO - FIAP 2025 - SERVIÇO DE ENCOMENDAS")
+                        .version("1.0.0")
+                        .description("Microsserviço responsável pelo registro, gestão e enfileiramento de encomendas recepcionadas na portaria, incluindo integração com Kafka para processamento assíncrono."));
     }
 }
