@@ -23,7 +23,7 @@ public class SecurityConfigDocker {
      */
     @Bean
     public SecurityFilterChain parcelServiceSecurityFilterChainDocker(HttpSecurity http) throws Exception {
-        // Configuração mínima que permite que a aplicação suba.
+
         http
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()
