@@ -15,6 +15,11 @@ import java.util.Map;
 
 /**
  * Producer Kafka para eventos relacionados a encomendas.
+ *
+ * Enviar eventos de domínio (PARCEL_RECEIVED e PARCEL_PICKED_UP) para o tópico
+ * de entrada (parcelsInTopic). Consumidores (Notification Service, Audit) ficam responsáveis por processar
+ * e enviar notificações/saídas.
+ *
  */
 @Component
 public class ParcelKafkaProducer {
@@ -36,13 +41,17 @@ public class ParcelKafkaProducer {
         this.notificationsOutTopic = (notificationsOutTopic == null || notificationsOutTopic.isBlank()) ? "notifications-out" : notificationsOutTopic;
 
         if ("parcels-in".equals(this.parcelsInTopic)) {
-            log.warn("Using default kafka.topics.parcels-in='parcels-in'. Consider setting kafka.topics.parcels-in in your application properties or environment for profile 'docker'.");
+            log.warn("Usando o valor padrão kafka.topics.parcels-in='parcels-in'.");
         }
         if ("notifications-out".equals(this.notificationsOutTopic)) {
-            log.warn("Using default kafka.topics.notifications-out='notifications-out'. Consider setting kafka.topics.notifications-out in your application properties or environment for profile 'docker'.");
+            log.warn("Usando o valor padrão kafka.topics.notifications-out='notifications-out'.");
         }
     }
 
+    /**
+     * Publica evento PARCEL_RECEIVED no tópico de entrada (parcelsInTopic).
+     *
+     */
     public void sendParcelReceivedEvent(Parcel parcel) {
         Map<String, Object> event = new HashMap<>();
         event.put("eventType", "PARCEL_RECEIVED");
@@ -50,17 +59,23 @@ public class ParcelKafkaProducer {
         event.put("recipientName", parcel.getRecipientName());
         event.put("apartment", parcel.getApartment());
         event.put("description", parcel.getDescription());
-        event.put("timestamp", parcel.getCreatedAt().toString());
+        event.put("status", parcel.getStatus() != null ? parcel.getStatus().name() : null);
+        event.put("notified", parcel.isNotified());
+        event.put("timestamp", parcel.getCreatedAt() != null ? parcel.getCreatedAt().toString() : Instant.now().toString());
 
         try {
             String payload = objectMapper.writeValueAsString(event);
             kafkaTemplate.send(parcelsInTopic, String.valueOf(parcel.getId()), payload);
-            log.info("Sent PARCEL_RECEIVED event for id={} to topic={}", parcel.getId(), parcelsInTopic);
+            log.info("Evento 'PARCEL_RECEIVED' enviado para encomenda id={} no tópico='{}'.", parcel.getId(), parcelsInTopic);
         } catch (JsonProcessingException e) {
-            log.error("Failed to serialize parcel received event", e);
+            log.error("Falha ao serializar o evento 'PARCEL_RECEIVED' para a encomenda id={}.", parcel.getId(), e);
         }
     }
 
+    /**
+     * Publica evento PARCEL_PICKED_UP no mesmo tópico de entrada para que consumidores processem.
+     *
+     */
     public void sendParcelPickedUpEvent(Parcel parcel, String pickedBy) {
         Map<String, Object> event = new HashMap<>();
         event.put("eventType", "PARCEL_PICKED_UP");
@@ -69,14 +84,16 @@ public class ParcelKafkaProducer {
         event.put("apartment", parcel.getApartment());
         event.put("description", parcel.getDescription());
         event.put("pickedBy", pickedBy);
-        event.put("timestamp", Instant.now().toString());
+        event.put("status", parcel.getStatus() != null ? parcel.getStatus().name() : null);
+        event.put("timestamp", parcel.getUpdatedAt() != null ? parcel.getUpdatedAt().toString() : Instant.now().toString());
 
         try {
             String payload = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send(notificationsOutTopic, String.valueOf(parcel.getId()), payload);
-            log.info("Sent PARCEL_PICKED_UP event for id={} to topic={}", parcel.getId(), notificationsOutTopic);
+            // Envia para o tópico de entrada (parcelsInTopic) para processamento por Notification/Audit
+            kafkaTemplate.send(parcelsInTopic, String.valueOf(parcel.getId()), payload);
+            log.info("Evento 'PARCEL_PICKED_UP' enviado para encomenda id={} no tópico='{}'. (retirada por: {})", parcel.getId(), parcelsInTopic, pickedBy);
         } catch (JsonProcessingException e) {
-            log.error("Failed to serialize parcel picked-up event", e);
+            log.error("Falha ao serializar o evento 'PARCEL_PICKED_UP' para a encomenda id={}.", parcel.getId(), e);
         }
     }
 }
