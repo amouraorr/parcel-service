@@ -6,13 +6,15 @@ import java.time.OffsetDateTime;
 
 public class ParcelResponse {
     private Long id;
-    private String recipientName;
+    private String residentName;
     private String apartment;
     private String description;
     private ParcelStatus status;
     private boolean notified;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+    private String contact;
+    private String channel;
 
     public ParcelResponse() {
     }
@@ -25,12 +27,12 @@ public class ParcelResponse {
         this.id = id;
     }
 
-    public String getRecipientName() {
-        return recipientName;
+    public String getResidentName() {
+        return residentName;
     }
 
-    public void setRecipientName(String recipientName) {
-        this.recipientName = recipientName;
+    public void setResidentName(String residentName) {
+        this.residentName = residentName;
     }
 
     public String getApartment() {
@@ -80,4 +82,12 @@ public class ParcelResponse {
     public void setUpdatedAt(OffsetDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public String getContact() { return contact; }
+
+    public void setContact(String contact) { this.contact = contact; }
+
+    public String getChannel() { return channel; }
+
+    public void setChannel(String channel) { this.channel = channel; }
 }

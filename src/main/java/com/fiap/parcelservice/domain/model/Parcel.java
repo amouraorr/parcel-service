@@ -11,8 +11,8 @@ public class Parcel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="recipient_name", nullable = false)
-    private String recipientName;
+    @Column(name="resident_name", nullable = false)
+    private String residentName;
 
     @Column(name="apartment", nullable = false)
     private String apartment;
@@ -33,11 +33,17 @@ public class Parcel {
     @Column(name="updated_at", nullable = false)
     private OffsetDateTime updatedAt = OffsetDateTime.now();
 
+    @Column(name = "contact", length = 255)
+    private String contact;
+
+    @Column(name = "channel", length = 20)
+    private String channel;
+
     public Parcel() {
     }
 
-    public Parcel(String recipientName, String apartment, String description, ParcelStatus status) {
-        this.recipientName = recipientName;
+    public Parcel(String residentName, String apartment, String description, ParcelStatus status) {
+        this.residentName = residentName;
         this.apartment = apartment;
         this.description = description;
         this.status = status;
@@ -59,12 +65,12 @@ public class Parcel {
         return id;
     }
 
-    public String getRecipientName() {
-        return recipientName;
+    public String getResidentName() {
+        return residentName;
     }
 
-    public void setRecipientName(String recipientName) {
-        this.recipientName = recipientName;
+    public void setResidentName(String residentName) {
+        this.residentName = residentName;
     }
 
     public String getApartment() {
@@ -106,4 +112,12 @@ public class Parcel {
     public OffsetDateTime getUpdatedAt() {
         return updatedAt;
     }
+
+    public String getContact() { return contact; }
+
+    public void setContact(String contact) { this.contact = contact; }
+
+    public String getChannel() { return channel; }
+
+    public void setChannel(String channel) { this.channel = channel; }
 }

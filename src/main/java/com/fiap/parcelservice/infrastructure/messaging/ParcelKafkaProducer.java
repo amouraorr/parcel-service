@@ -9,17 +9,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Producer Kafka para eventos relacionados a encomendas.
  *
- * Enviar eventos de domínio (PARCEL_RECEIVED e PARCEL_PICKED_UP) para o tópico
- * de entrada (parcelsInTopic). Consumidores (Notification Service, Audit) ficam responsáveis por processar
- * e enviar notificações/saídas.
- *
+ * Mantém também eventType e parcelId para auditoria.
  */
 @Component
 public class ParcelKafkaProducer {
@@ -41,10 +38,10 @@ public class ParcelKafkaProducer {
         this.notificationsOutTopic = (notificationsOutTopic == null || notificationsOutTopic.isBlank()) ? "notifications-out" : notificationsOutTopic;
 
         if ("parcels-in".equals(this.parcelsInTopic)) {
-            log.warn("Usando o valor padrão kafka.topics.parcels-in='parcels-in'.");
+            log.warn("Usando valor padrão kafka.topics.parcels-in='parcels-in'");
         }
         if ("notifications-out".equals(this.notificationsOutTopic)) {
-            log.warn("Usando o valor padrão kafka.topics.notifications-out='notifications-out'.");
+            log.warn("Usando valor padrão kafka.topics.notifications-out='notifications-out'.");
         }
     }
 
@@ -56,44 +53,89 @@ public class ParcelKafkaProducer {
         Map<String, Object> event = new HashMap<>();
         event.put("eventType", "PARCEL_RECEIVED");
         event.put("parcelId", parcel.getId());
-        event.put("recipientName", parcel.getRecipientName());
+        event.put("residentName", parcel.getResidentName());
         event.put("apartment", parcel.getApartment());
         event.put("description", parcel.getDescription());
+        event.put("contact", parcel.getContact());
+        String channel = parcel.getChannel();
+        event.put("channel", (channel == null || channel.isBlank()) ? "PUSH" : channel.toUpperCase());
+        OffsetDateTime receivedAt = parcel.getCreatedAt() != null ? parcel.getCreatedAt() : OffsetDateTime.now();
+        event.put("receivedAt", receivedAt.toString());
+
         event.put("status", parcel.getStatus() != null ? parcel.getStatus().name() : null);
         event.put("notified", parcel.isNotified());
-        event.put("timestamp", parcel.getCreatedAt() != null ? parcel.getCreatedAt().toString() : Instant.now().toString());
 
         try {
             String payload = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send(parcelsInTopic, String.valueOf(parcel.getId()), payload);
-            log.info("Evento 'PARCEL_RECEIVED' enviado para encomenda id={} no tópico='{}'.", parcel.getId(), parcelsInTopic);
+            var future = kafkaTemplate.send(parcelsInTopic, String.valueOf(parcel.getId()), payload);
+            final String preview = preview(payload);
+            future.whenComplete((result, ex) -> {
+                if (ex == null) {
+                    if (result != null && result.getRecordMetadata() != null) {
+                        var meta = result.getRecordMetadata();
+                        log.info("Evento PARCEL_RECEIVED enviado id={} tópico={} partição={} offset={} previewPayload={}",
+                                parcel.getId(), meta.topic(), meta.partition(), meta.offset(), preview);
+                    } else {
+                        log.info("Evento PARCEL_RECEIVED enviado id={} mas sem metadata disponível previewPayload={}", parcel.getId(), preview);
+                    }
+                } else {
+                    log.error("Falha ao enviar evento PARCEL_RECEIVED id={} previewPayload={}", parcel.getId(), preview, ex);
+                }
+            });
+
+            log.debug("Envio disparado para PARCEL_RECEIVED id={} previewPayload={}", parcel.getId(), preview);
         } catch (JsonProcessingException e) {
-            log.error("Falha ao serializar o evento 'PARCEL_RECEIVED' para a encomenda id={}.", parcel.getId(), e);
+            log.error("Falha ao serializar evento PARCEL_RECEIVED para id={}", parcel.getId(), e);
         }
     }
 
     /**
-     * Publica evento PARCEL_PICKED_UP no mesmo tópico de entrada para que consumidores processem.
-     *
+     * Publica evento PARCEL_PICKED_UP
      */
     public void sendParcelPickedUpEvent(Parcel parcel, String pickedBy) {
         Map<String, Object> event = new HashMap<>();
         event.put("eventType", "PARCEL_PICKED_UP");
         event.put("parcelId", parcel.getId());
-        event.put("recipientName", parcel.getRecipientName());
+
+        event.put("residentName", parcel.getResidentName());
         event.put("apartment", parcel.getApartment());
         event.put("description", parcel.getDescription());
+        event.put("contact", parcel.getContact());
+        String channel = parcel.getChannel();
+        event.put("channel", (channel == null || channel.isBlank()) ? "PUSH" : channel.toUpperCase());
         event.put("pickedBy", pickedBy);
+        OffsetDateTime updatedAt = parcel.getUpdatedAt() != null ? parcel.getUpdatedAt() : OffsetDateTime.now();
+        event.put("receivedAt", updatedAt.toString());
+
         event.put("status", parcel.getStatus() != null ? parcel.getStatus().name() : null);
-        event.put("timestamp", parcel.getUpdatedAt() != null ? parcel.getUpdatedAt().toString() : Instant.now().toString());
 
         try {
             String payload = objectMapper.writeValueAsString(event);
-            // Envia para o tópico de entrada (parcelsInTopic) para processamento por Notification/Audit
-            kafkaTemplate.send(parcelsInTopic, String.valueOf(parcel.getId()), payload);
-            log.info("Evento 'PARCEL_PICKED_UP' enviado para encomenda id={} no tópico='{}'. (retirada por: {})", parcel.getId(), parcelsInTopic, pickedBy);
+            var future = kafkaTemplate.send(parcelsInTopic, String.valueOf(parcel.getId()), payload);
+            final String preview = preview(payload);
+            future.whenComplete((result, ex) -> {
+                if (ex == null) {
+                    if (result != null && result.getRecordMetadata() != null) {
+                        var meta = result.getRecordMetadata();
+                        log.info("Evento PARCEL_PICKED_UP enviado id={} tópico={} partição={} offset={} previewPayload={}",
+                                parcel.getId(), meta.topic(), meta.partition(), meta.offset(), preview);
+                    } else {
+                        log.info("Evento PARCEL_PICKED_UP enviado id={} mas sem metadata disponível previewPayload={}", parcel.getId(), preview);
+                    }
+                } else {
+                    log.error("Falha ao enviar evento PARCEL_PICKED_UP id={} previewPayload={}", parcel.getId(), preview, ex);
+                }
+            });
+
+            log.debug("Envio disparado para PARCEL_PICKED_UP id={} previewPayload={}", parcel.getId(), preview);
         } catch (JsonProcessingException e) {
-            log.error("Falha ao serializar o evento 'PARCEL_PICKED_UP' para a encomenda id={}.", parcel.getId(), e);
+            log.error("Falha ao serializar evento PARCEL_PICKED_UP para id={}", parcel.getId(), e);
         }
+    }
+
+    private String preview(String s) {
+        if (s == null) return "";
+        int max = 800;
+        return s.length() <= max ? s : s.substring(0, max) + "...[truncado]";
     }
 }

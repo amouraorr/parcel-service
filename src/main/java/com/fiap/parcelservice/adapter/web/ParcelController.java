@@ -37,7 +37,7 @@ public class ParcelController {
      */
     @PostMapping("/parcels")
     public ResponseEntity<ParcelResponse> receiveParcel(@Valid @RequestBody ParcelRequest request) {
-        log.info("Recebendo nova encomenda para destinatário={} apt={}", request.getRecipientName(), request.getApartment());
+        log.info("Recebendo nova encomenda para destinatário={} apt={}", request.getResidentName(), request.getApartment());
 
         ParcelResponse created = parcelService.receiveParcel(request);
 
