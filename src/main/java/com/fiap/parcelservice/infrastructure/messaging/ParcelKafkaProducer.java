@@ -30,18 +30,18 @@ public class ParcelKafkaProducer {
 
     public ParcelKafkaProducer(KafkaTemplate<String, String> kafkaTemplate,
                                ObjectMapper objectMapper,
-                               @Value("${kafka.topics.parcels-in:parcels-in}") String parcelsInTopic,
-                               @Value("${kafka.topics.notifications-out:notifications-out}") String notificationsOutTopic) {
+                               @Value("${KAFKA_TOPICS_PARCELS_IN:parcels.received}") String parcelsInTopic,
+                               @Value("${KAFKA_TOPICS_NOTIFICATIONS_OUT:notifications.sent}") String notificationsOutTopic) {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
-        this.parcelsInTopic = (parcelsInTopic == null || parcelsInTopic.isBlank()) ? "parcels-in" : parcelsInTopic;
-        this.notificationsOutTopic = (notificationsOutTopic == null || notificationsOutTopic.isBlank()) ? "notifications-out" : notificationsOutTopic;
+        this.parcelsInTopic = (parcelsInTopic == null || parcelsInTopic.isBlank()) ? "parcels.received" : parcelsInTopic;
+        this.notificationsOutTopic = (notificationsOutTopic == null || notificationsOutTopic.isBlank()) ? "notifications.sent" : notificationsOutTopic;
 
-        if ("parcels-in".equals(this.parcelsInTopic)) {
-            log.warn("Usando valor padrão kafka.topics.parcels-in='parcels-in'");
+        if ("parcels.received".equals(this.parcelsInTopic)) {
+            log.warn("Usando valor padrão KAFKA_TOPICS_PARCELS_IN='parcels.received'");
         }
-        if ("notifications-out".equals(this.notificationsOutTopic)) {
-            log.warn("Usando valor padrão kafka.topics.notifications-out='notifications-out'.");
+        if ("notifications.sent".equals(this.notificationsOutTopic)) {
+            log.warn("Usando valor padrão KAFKA_TOPICS_NOTIFICATIONS_OUT='notifications.sent'.");
         }
     }
 

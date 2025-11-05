@@ -1,4 +1,7 @@
 -- V1: create parcels table
+
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 CREATE TABLE IF NOT EXISTS parcels (
 
     id BIGSERIAL PRIMARY KEY,
