@@ -16,7 +16,6 @@ import java.util.Map;
 /**
  * Producer Kafka para eventos relacionados a encomendas.
  *
- * Mantém também eventType e parcelId para auditoria.
  */
 @Component
 public class ParcelKafkaProducer {
@@ -47,7 +46,6 @@ public class ParcelKafkaProducer {
 
     /**
      * Publica evento PARCEL_RECEIVED no tópico de entrada (parcelsInTopic).
-     *
      */
     public void sendParcelReceivedEvent(Parcel parcel) {
         Map<String, Object> event = new HashMap<>();
@@ -61,9 +59,6 @@ public class ParcelKafkaProducer {
         event.put("channel", (channel == null || channel.isBlank()) ? "PUSH" : channel.toUpperCase());
         OffsetDateTime receivedAt = parcel.getCreatedAt() != null ? parcel.getCreatedAt() : OffsetDateTime.now();
         event.put("receivedAt", receivedAt.toString());
-
-        event.put("status", parcel.getStatus() != null ? parcel.getStatus().name() : null);
-        event.put("notified", parcel.isNotified());
 
         try {
             String payload = objectMapper.writeValueAsString(event);

@@ -24,9 +24,6 @@ public class Parcel {
     @Column(name="status", nullable = false)
     private ParcelStatus status;
 
-    @Column(name="notified", nullable = false)
-    private boolean notified = false;
-
     @Column(name="created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
@@ -95,14 +92,6 @@ public class Parcel {
 
     public void setStatus(ParcelStatus status) {
         this.status = status;
-    }
-
-    public boolean isNotified() {
-        return notified;
-    }
-
-    public void setNotified(boolean notified) {
-        this.notified = notified;
     }
 
     public OffsetDateTime getCreatedAt() {

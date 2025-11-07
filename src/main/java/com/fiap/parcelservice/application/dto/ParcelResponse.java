@@ -10,7 +10,6 @@ public class ParcelResponse {
     private String apartment;
     private String description;
     private ParcelStatus status;
-    private boolean notified;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
     private String contact;
@@ -57,14 +56,6 @@ public class ParcelResponse {
 
     public void setStatus(ParcelStatus status) {
         this.status = status;
-    }
-
-    public boolean isNotified() {
-        return notified;
-    }
-
-    public void setNotified(boolean notified) {
-        this.notified = notified;
     }
 
     public OffsetDateTime getCreatedAt() {
