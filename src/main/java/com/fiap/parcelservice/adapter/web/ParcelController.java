@@ -15,9 +15,13 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * Controller REST do Parcel Service — endpoints para receber, listar, consultar e marcar retirada de encomendas.
  */
+@Tag(name = "Parcel", description = "Endpoints para registro, consulta e controle de retirada de encomendas")
 @RestController
 @RequestMapping("/api")
 @Validated
@@ -35,6 +39,7 @@ public class ParcelController {
      * Recebe uma encomenda na portaria — persiste e publica evento para fila de processamento.
      * Retorna 201 Created com Location apontando para o recurso criado.
      */
+    @Operation(summary = "Registrar nova encomenda na portaria")
     @PostMapping("/parcels")
     public ResponseEntity<ParcelResponse> receiveParcel(@Valid @RequestBody ParcelRequest request) {
         log.info("Recebendo nova encomenda para destinatário={} apt={}", request.getResidentName(), request.getApartment());
@@ -54,6 +59,7 @@ public class ParcelController {
     /**
      * Consulta uma encomenda por id.
      */
+    @Operation(summary = "Consultar encomenda por ID")
     @GetMapping("/parcels/{id}")
     public ResponseEntity<ParcelResponse> getParcel(@PathVariable("id") Long id) {
         ParcelResponse resp = parcelService.getParcel(id);
@@ -66,6 +72,7 @@ public class ParcelController {
     /**
      * Lista todas as encomendas.
      */
+    @Operation(summary = "Listar todas as encomendas")
     @GetMapping("/parcels")
     public ResponseEntity<List<ParcelResponse>> listParcels() {
         List<ParcelResponse> list = parcelService.listParcels();
@@ -76,6 +83,7 @@ public class ParcelController {
      * Marca a encomenda como retirada (pickup) pelo porteiro.
      * Query param 'pickedBy' identifica quem efetuou a baixa (p.ex. nome do porteiro).
      */
+    @Operation(summary = "Marcar encomenda como retirada (pickup)")
     @PostMapping("/parcels/{id}/pickup")
     public ResponseEntity<ParcelResponse> markPickedUp(@PathVariable("id") Long id,
                                                        @RequestParam(value = "pickedBy", required = false) String pickedBy) {
