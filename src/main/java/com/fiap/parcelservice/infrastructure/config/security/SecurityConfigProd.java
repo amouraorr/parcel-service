@@ -9,9 +9,6 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Configuração de segurança para ambientes de execução (não docker e não test).
- * Alterado o @Profile para excluir explicitamente o profile "test", evitando a
- * criação concorrente de duas SecurityFilterChain que combinam 'anyRequest()'
- * durante os testes automatizados.
  */
 @Configuration(value = "parcelServiceSecurityConfigProd", proxyBeanMethods = false)
 @Profile("!docker & !test")
