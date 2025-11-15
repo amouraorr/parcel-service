@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: parcel-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/parcelservice_db}
+    username: ${SPRING_DATASOURCE_USERNAME:parcelservice}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+  flyway:
+    enabled: true
+
+  kafka:
+    bootstrap-servers: "${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}"
+    producer: {}
+
+kafka:
+  topics:
+    parcels-in: ${KAFKA_TOPICS_PARCELS_PRODUCE:parcels.received}
+    notifications-out: ${KAFKA_TOPICS_NOTIFICATIONS_OUT:notifications.sent}
+
+logging:
+  level:
+    com.fiap: DEBUG

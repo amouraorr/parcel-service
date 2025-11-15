@@ -1,9 +1,9 @@
-package com.alex.parcel_service;
+package com.fiap.parcelservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.fiap.parcelservice")
 public class ParcelServiceApplication {
 
 	public static void main(String[] args) {
